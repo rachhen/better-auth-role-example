@@ -2,7 +2,6 @@
 
 import * as React from "react";
 
-import { AppSidebarUser } from "@/components/app-sidebar-user";
 import {
   Sidebar,
   SidebarContent,
@@ -15,7 +14,6 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { User } from "better-auth";
 import {
   LayoutDashboard,
   Settings2Icon,
@@ -23,6 +21,7 @@ import {
   UsersIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { UserButton } from "./auth/user/user-button";
 import { Logo } from "./logo";
 
 const links = [
@@ -48,10 +47,8 @@ const links = [
   },
 ];
 
-type Props = React.ComponentProps<typeof Sidebar> & {
-  user: User;
-};
-export function AppSidebar({ user, ...props }: Props) {
+type Props = React.ComponentProps<typeof Sidebar>;
+export function AppSidebar({ ...props }: Props) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -76,7 +73,7 @@ export function AppSidebar({ user, ...props }: Props) {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <AppSidebarUser user={user} />
+        <UserButton side="right" />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

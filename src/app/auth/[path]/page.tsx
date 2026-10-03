@@ -3,10 +3,12 @@ import { magicLinkPlugin } from "@better-auth-ui/core/plugins/magic-link";
 import { notFound } from "next/navigation";
 
 import { Auth } from "@/components/auth/auth";
+import { organizationPlugin } from "@/lib/auth/organization-plugin";
 
 const validAuthPaths = new Set([
   ...Object.values(viewPaths.auth),
   ...Object.values(magicLinkPlugin().viewPaths.auth ?? {}),
+  ...Object.values(organizationPlugin().viewPaths.auth),
 ]);
 
 export default async function AuthPage({
