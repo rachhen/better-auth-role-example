@@ -1,23 +1,12 @@
-import { headers } from "next/headers";
-import Link from "next/link";
-import { redirect } from "next/navigation";
-
-import { auth } from "@/lib/auth";
-
-export default async function Dashboard() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    redirect("/auth/sign-in?redirectTo=/dashboard");
-  }
-
+export default function Page() {
   return (
-    <div className="flex flex-col items-center my-auto">
-      <h1 className="text-2xl">Hello, {session.user.email}</h1>
-
-      <Link href="/auth/sign-out">Sign Out</Link>
+    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
+        <div className="aspect-video rounded-xl bg-muted/50" />
+        <div className="aspect-video rounded-xl bg-muted/50" />
+        <div className="aspect-video rounded-xl bg-muted/50" />
+      </div>
+      <div className="min-h-screen flex-1 rounded-xl bg-muted/50 md:min-h-min" />
     </div>
   );
 }
