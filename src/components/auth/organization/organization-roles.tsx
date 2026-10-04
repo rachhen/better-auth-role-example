@@ -670,12 +670,14 @@ function RoleDialog({
           value.additionalFields
         )
         if (role) {
+          const nameChanged =
+            roleName.toLowerCase() !== role.role.toLowerCase()
           await updateRole.mutateAsync({
             organizationId,
             roleId: role.id,
             data: {
               ...additionalFields,
-              roleName,
+              ...(nameChanged ? { roleName } : {}),
               permission: value.permission
             }
           })

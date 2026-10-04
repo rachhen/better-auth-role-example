@@ -8,6 +8,7 @@ import { deleteUserPlugin } from "@/lib/auth/delete-user-plugin";
 import { lastLoginMethodPlugin } from "@/lib/auth/last-login-method-plugin";
 import { organizationPlugin } from "@/lib/auth/organization-plugin";
 import { themePlugin } from "@/lib/auth/theme-plugin";
+import { organizationPermissions } from "@/lib/organization-access";
 import { getQueryClient } from "@/lib/query-client";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useTheme } from "next-themes";
@@ -35,6 +36,10 @@ export const Providers = ({ children }: PropsWithChildren) => {
           lastLoginMethodPlugin(),
           organizationPlugin({
             allowMultipleRoles: false,
+            dynamicAccessControl: {
+              enabled: true,
+              permissions: organizationPermissions,
+            },
           }),
         ]}
         Link={Link}

@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { db } from "@/db";
 
 export default async function Home() {
-  const users = await db.query.user.findMany();
+  const users = await db.query.users.findMany();
 
   console.log("users", users);
 

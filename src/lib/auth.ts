@@ -3,11 +3,13 @@ import * as schema from "@/db/schema";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { betterAuth } from "better-auth";
 import { organization } from "better-auth/plugins/organization";
+import { organizationAccess, organizationRoles } from "./organization-access";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
     schema,
+    usePlural: true,
   }),
   emailAndPassword: {
     enabled: true,
@@ -17,5 +19,11 @@ export const auth = betterAuth({
       enabled: true,
     },
   },
-  plugins: [organization()],
+  plugins: [
+    organization({
+      ac: organizationAccess,
+      roles: organizationRoles,
+      dynamicAccessControl: { enabled: true },
+    }),
+  ],
 });

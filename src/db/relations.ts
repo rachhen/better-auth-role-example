@@ -1,58 +1,93 @@
-import { defineRelations } from "drizzle-orm/relations";
-import {
-  account,
-  invitation,
-  member,
-  organization,
-  session,
-  user,
-  verification,
-} from "./schema";
+import { defineRelations } from "drizzle-orm";
+import * as schema from "./schema";
 
-export const relations = defineRelations(
-  { user, session, account, verification, organization, member, invitation },
-  (r) => ({
-    user: {
-      sessions: r.many.session(),
-      accounts: r.many.account(),
-      members: r.many.member(),
-      invitations: r.many.invitation(),
-    },
-    session: {
-      user: r.one.user({
-        from: r.session.userId,
-        to: r.user.id,
-      }),
-    },
-    account: {
-      user: r.one.user({
-        from: r.account.userId,
-        to: r.user.id,
-      }),
-    },
-    organization: {
-      members: r.many.member(),
-      invitations: r.many.invitation(),
-    },
-    member: {
-      organization: r.one.organization({
-        from: r.member.organizationId,
-        to: r.organization.id,
-      }),
-      user: r.one.user({
-        from: r.member.userId,
-        to: r.user.id,
-      }),
-    },
-    invitation: {
-      organization: r.one.organization({
-        from: r.invitation.organizationId,
-        to: r.organization.id,
-      }),
-      user: r.one.user({
-        from: r.invitation.inviterId,
-        to: r.user.id,
-      }),
-    },
-  }),
-);
+export const relations = defineRelations(schema, (r) => ({
+  users: {
+    sessions: r.many.sessions({
+      from: r.users.id,
+      to: r.sessions.userId,
+    }),
+    accounts: r.many.accounts({
+      from: r.users.id,
+      to: r.accounts.userId,
+    }),
+    members: r.many.members({
+      from: r.users.id,
+      to: r.members.userId,
+    }),
+    invitations: r.many.invitations({
+      from: r.users.id,
+      to: r.invitations.inviterId,
+    }),
+    projects: r.many.projects({
+      from: r.users.id,
+      to: r.projects.createdBy,
+    }),
+  },
+  sessions: {
+    user: r.one.users({
+      from: r.sessions.userId,
+      to: r.users.id,
+    }),
+  },
+  accounts: {
+    user: r.one.users({
+      from: r.accounts.userId,
+      to: r.users.id,
+    }),
+  },
+  organizations: {
+    organizationRoles: r.many.organizationRoles({
+      from: r.organizations.id,
+      to: r.organizationRoles.organizationId,
+    }),
+    members: r.many.members({
+      from: r.organizations.id,
+      to: r.members.organizationId,
+    }),
+    invitations: r.many.invitations({
+      from: r.organizations.id,
+      to: r.invitations.organizationId,
+    }),
+    projects: r.many.projects({
+      from: r.organizations.id,
+      to: r.projects.organizationId,
+    }),
+  },
+  organizationRoles: {
+    organization: r.one.organizations({
+      from: r.organizationRoles.organizationId,
+      to: r.organizations.id,
+    }),
+  },
+  members: {
+    organization: r.one.organizations({
+      from: r.members.organizationId,
+      to: r.organizations.id,
+    }),
+    user: r.one.users({
+      from: r.members.userId,
+      to: r.users.id,
+    }),
+  },
+  invitations: {
+    organization: r.one.organizations({
+      from: r.invitations.organizationId,
+      to: r.organizations.id,
+    }),
+    user: r.one.users({
+      from: r.invitations.inviterId,
+      to: r.users.id,
+    }),
+  },
+  projects: {
+    organization: r.one.organizations({
+      from: r.projects.organizationId,
+      to: r.organizations.id,
+    }),
+    creator: r.one.users({
+      from: r.projects.createdBy,
+      to: r.users.id,
+    }),
+  },
+}));

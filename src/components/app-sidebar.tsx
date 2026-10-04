@@ -15,6 +15,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import {
+  FolderKanban,
   LayoutDashboard,
   Settings2Icon,
   UserShield,
@@ -29,6 +30,11 @@ const links = [
     title: "Dashboard",
     url: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Projects",
+    url: "/projects",
+    icon: FolderKanban,
   },
   {
     title: "Users",

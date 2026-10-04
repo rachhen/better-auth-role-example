@@ -1,7 +1,13 @@
-import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { defineRelations } from "drizzle-orm/relations";
+import {
+  boolean,
+  index,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 
-export const user = pgTable("user", {
+export const users = pgTable("users", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
@@ -14,8 +20,8 @@ export const user = pgTable("user", {
     .notNull(),
 });
 
-export const session = pgTable(
-  "session",
+export const sessions = pgTable(
+  "sessions",
   {
     id: text("id").primaryKey(),
     expiresAt: timestamp("expires_at").notNull(),
@@ -28,21 +34,21 @@ export const session = pgTable(
     userAgent: text("user_agent"),
     userId: text("user_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "cascade" }),
     activeOrganizationId: text("active_organization_id"),
   },
-  (table) => [index("session_userId_idx").on(table.userId)],
+  (table) => [index("sessions_userId_idx").on(table.userId)],
 );
 
-export const account = pgTable(
-  "account",
+export const accounts = pgTable(
+  "accounts",
   {
     id: text("id").primaryKey(),
     accountId: text("account_id").notNull(),
     providerId: text("provider_id").notNull(),
     userId: text("user_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "cascade" }),
     accessToken: text("access_token"),
     refreshToken: text("refresh_token"),
     idToken: text("id_token"),
@@ -55,11 +61,11 @@ export const account = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("account_userId_idx").on(table.userId)],
+  (table) => [index("accounts_userId_idx").on(table.userId)],
 );
 
-export const verification = pgTable(
-  "verification",
+export const verifications = pgTable(
+  "verifications",
   {
     id: text("id").primaryKey(),
     identifier: text("identifier").notNull(),
@@ -71,44 +77,68 @@ export const verification = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("verification_identifier_idx").on(table.identifier)],
+  (table) => [index("verifications_identifier_idx").on(table.identifier)],
 );
 
-export const organization = pgTable("organization", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  slug: text("slug").notNull().unique(),
-  logo: text("logo"),
-  createdAt: timestamp("created_at").notNull(),
-  metadata: text("metadata"),
-});
+export const organizations = pgTable(
+  "organizations",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    slug: text("slug").notNull().unique(),
+    logo: text("logo"),
+    createdAt: timestamp("created_at").notNull(),
+    metadata: text("metadata"),
+  },
+  (table) => [uniqueIndex("organizations_slug_uidx").on(table.slug)],
+);
 
-export const member = pgTable(
-  "member",
+export const organizationRoles = pgTable(
+  "organization_roles",
   {
     id: text("id").primaryKey(),
     organizationId: text("organization_id")
       .notNull()
-      .references(() => organization.id, { onDelete: "cascade" }),
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    permission: text("permission").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").$onUpdate(
+      () => /* @__PURE__ */ new Date(),
+    ),
+  },
+  (table) => [
+    index("organizationRoles_organizationId_idx").on(table.organizationId),
+    index("organizationRoles_role_idx").on(table.role),
+  ],
+);
+
+export const members = pgTable(
+  "members",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     userId: text("user_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "cascade" }),
     role: text("role").default("member").notNull(),
     createdAt: timestamp("created_at").notNull(),
   },
   (table) => [
-    index("member_organizationId_idx").on(table.organizationId),
-    index("member_userId_idx").on(table.userId),
+    index("members_organizationId_idx").on(table.organizationId),
+    index("members_userId_idx").on(table.userId),
   ],
 );
 
-export const invitation = pgTable(
-  "invitation",
+export const invitations = pgTable(
+  "invitations",
   {
     id: text("id").primaryKey(),
     organizationId: text("organization_id")
       .notNull()
-      .references(() => organization.id, { onDelete: "cascade" }),
+      .references(() => organizations.id, { onDelete: "cascade" }),
     email: text("email").notNull(),
     role: text("role"),
     status: text("status").default("pending").notNull(),
@@ -116,58 +146,32 @@ export const invitation = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     inviterId: text("inviter_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "cascade" }),
   },
   (table) => [
-    index("invitation_organizationId_idx").on(table.organizationId),
-    index("invitation_email_idx").on(table.email),
+    index("invitations_organizationId_idx").on(table.organizationId),
+    index("invitations_email_idx").on(table.email),
   ],
 );
 
-export const relations = defineRelations(
-  { user, session, account, verification, organization, member, invitation },
-  (r) => ({
-    user: {
-      sessions: r.many.session(),
-      accounts: r.many.account(),
-      members: r.many.member(),
-      invitations: r.many.invitation(),
-    },
-    session: {
-      user: r.one.user({
-        from: r.session.userId,
-        to: r.user.id,
-      }),
-    },
-    account: {
-      user: r.one.user({
-        from: r.account.userId,
-        to: r.user.id,
-      }),
-    },
-    organization: {
-      members: r.many.member(),
-      invitations: r.many.invitation(),
-    },
-    member: {
-      organization: r.one.organization({
-        from: r.member.organizationId,
-        to: r.organization.id,
-      }),
-      user: r.one.user({
-        from: r.member.userId,
-        to: r.user.id,
-      }),
-    },
-    invitation: {
-      organization: r.one.organization({
-        from: r.invitation.organizationId,
-        to: r.organization.id,
-      }),
-      user: r.one.user({
-        from: r.invitation.inviterId,
-        to: r.user.id,
-      }),
-    },
-  }),
+export const projects = pgTable(
+  "projects",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [index("projects_organizationId_idx").on(table.organizationId)],
 );
